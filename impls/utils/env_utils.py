@@ -105,7 +105,7 @@ def make_env_and_datasets(dataset_name, frame_stack=None):
     setup_egl()
 
     # Use compact dataset to save memory.
-    env, train_dataset, val_dataset = ogbench.make_env_and_datasets(dataset_name, compact_dataset=False)
+    env, train_dataset, val_dataset = ogbench.make_env_and_datasets(dataset_name, compact_dataset=True)
     train_dataset = Dataset.create(**train_dataset)
     val_dataset = Dataset.create(**val_dataset)
 

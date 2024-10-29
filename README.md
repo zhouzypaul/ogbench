@@ -20,7 +20,7 @@
 <div id="toc">
   <ul align="center" style="list-style: none;">
     <summary>
-      <h2><a href="https://seohong.me/projects/ogbench/">Paper</a> &emsp; <a href="https://seohong.me/projects/ogbench/">Project page</a></h2>
+      <h2><a href="https://arxiv.org/abs/2410.20092">Paper</a> &emsp; <a href="https://seohong.me/projects/ogbench/">Project page</a></h2>
     </summary>
   </ul>
 </div>
@@ -76,7 +76,7 @@ Here is an example of how to use OGBench:
 import ogbench
 
 # Make an environment and datasets (they will be automatically downloaded).
-dataset_name = 'antmaze-large-navigate-v0'
+dataset_name = 'humanoidmaze-large-navigate-v0'
 env, train_dataset, val_dataset = ogbench.make_env_and_datasets(dataset_name)
 
 # Train your offline goal-conditioned RL agent on the dataset.
@@ -228,7 +228,7 @@ or 5-12 hours (on pixel-based tasks) on a single A5000 GPU.
 For large pixel-based datasets (e.g., `visual-puzzle-4x6-play-v0` with 5M transitions),
 up to 120GB of RAM may be required.
 
-### Notes on hyperparameters and flags
+### Tips for hyperparameters and flags
 
 To reproduce the results in the paper, you need to use the hyperparameters provided.
 We provide a complete list of the exact command-line flags used to produce the main benchmark table
@@ -305,11 +305,6 @@ For example, to train an Ant expert policy, you can run the following command in
 ```shell
 python main_sac.py --env_name=online-ant-xy-v0
 ```
-
-# Questions?
-
-If you have any questions or issues, feel free to open an issue on this repository.
-You can also reach out via email to [Seohong Park](https://seohong.me) at [seohong@berkeley.edu](mailto:seohong@berkeley.edu).
 
 # Acknowledgments
 

@@ -424,7 +424,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
             return np.concatenate(ob)
 
     def compute_reward(self, ob, action):
-        return 0.0
+        return 1.0 if self._success else 0.0
 
     def get_reset_info(self):
         reset_info = self.compute_ob_info()
