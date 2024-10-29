@@ -102,6 +102,7 @@ for task_id in [1, 2, 3, 4, 5]:
         ob, reward, terminated, truncated, info = env.step(action)  # Gymnasium-style step.
         # If the agent reaches the goal, `terminated` will be `True`. If the episode length
         # exceeds the maximum length without reaching the goal, `truncated` will be `True`.
+        # `reward` is 1 if the agent reaches the goal and 0 otherwise.
         done = terminated or truncated
         frame = env.render()  # Render the current frame (optional).
 
