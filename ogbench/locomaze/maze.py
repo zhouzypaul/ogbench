@@ -41,6 +41,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             terminate_at_goal=True,
             ob_type='states',
             add_noise_to_goal=True,
+            reward_task_id=None,
             *args,
             **kwargs,
         ):
@@ -53,6 +54,9 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                 terminate_at_goal: Whether to terminate the episode when the goal is reached.
                 ob_type: Observation type. Either 'states' or 'pixels'.
                 add_noise_to_goal: Whether to add noise to the goal position.
+                reward_task_id: Task ID for single-task RL. If this is not None, the environment operates in a
+                    single-task mode with the specified task ID. The task ID must be either a valid task ID or 0, where
+                    0 means using the default task.
                 *args: Additional arguments to pass to the parent locomotion environment.
                 **kwargs: Additional keyword arguments to pass to the parent locomotion environment.
             """
@@ -62,6 +66,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             self._terminate_at_goal = terminate_at_goal
             self._ob_type = ob_type
             self._add_noise_to_goal = add_noise_to_goal
+            self._reward_task_id = reward_task_id
             assert ob_type in ['states', 'pixels']
 
             # Define constants.
@@ -337,11 +342,19 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                     )
                 )
 
+            if self._reward_task_id == 0:
+                self._reward_task_id = 1  # Default task.
+
         def reset(self, options=None, *args, **kwargs):
             if options is None:
                 options = {}
             # Set the task goal.
-            if 'task_id' in options:
+            if self._reward_task_id is not None:
+                # Use the pre-defined task.
+                assert 1 <= self._reward_task_id <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
+                self.cur_task_id = self._reward_task_id
+                self.cur_task_info = self.task_infos[self.cur_task_id - 1]
+            elif 'task_id' in options:
                 # Use the pre-defined task.
                 assert 1 <= options['task_id'] <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
                 self.cur_task_id = options['task_id']
@@ -415,6 +428,10 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             else:
                 info['success'] = 0.0
                 reward = 0.0
+
+            # If the environment is in the single-task mode, modify the reward.
+            if self._reward_task_id is not None:
+                reward = reward - 1.0  # -1 (failure) or 0 (success).
 
             return ob, reward, terminated, truncated, info
 
@@ -559,11 +576,19 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                     )
                 )
 
+            if self._reward_task_id == 0:
+                self._reward_task_id = 4  # Default task.
+
         def reset(self, options=None, *args, **kwargs):
             if options is None:
                 options = {}
             # Set the task goal.
-            if 'task_id' in options:
+            if self._reward_task_id is not None:
+                # Use the pre-defined task.
+                assert 1 <= self._reward_task_id <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
+                self.cur_task_id = self._reward_task_id
+                self.cur_task_info = self.task_infos[self.cur_task_id - 1]
+            elif 'task_id' in options:
                 # Use the pre-defined task.
                 assert 1 <= options['task_id'] <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
                 self.cur_task_id = options['task_id']
@@ -626,6 +651,10 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             else:
                 info['success'] = 0.0
                 reward = 0.0
+
+            # If the environment is in the single-task mode, modify the reward.
+            if self._reward_task_id is not None:
+                reward = reward - 1.0  # -1 (failure) or 0 (success).
 
             return ob, reward, terminated, truncated, info
 

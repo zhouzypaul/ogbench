@@ -28,6 +28,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         terminate_at_goal=True,
         mode='task',
         visualize_info=True,
+        reward_task_id=None,
         **kwargs,
     ):
         """Initialize the ManipSpace environment.
@@ -41,6 +42,9 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
                 for training and evaluation. In 'data_collection' mode, the environment is used for collecting offline
                 data.
             visualize_info: Whether to visualize the task information (e.g., success status).
+            reward_task_id: Task ID for single-task RL. If this is not None, the environment operates in a single-task
+            mode with the specified task ID. The task ID must be either a valid task ID or 0, where 0 means using the
+            default task.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
@@ -79,6 +83,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         self._terminate_at_goal = terminate_at_goal
         self._mode = mode
         self._visualize_info = visualize_info
+        self._reward_task_id = reward_task_id
 
         assert ob_type in ['states', 'pixels']
 
@@ -264,7 +269,12 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
             if options is None:
                 options = {}
 
-            if 'task_id' in options:
+            if self._reward_task_id is not None:
+                # Use the pre-defined task.
+                assert 1 <= self._reward_task_id <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
+                self.cur_task_id = self._reward_task_id
+                self.cur_task_info = self.task_infos[self.cur_task_id - 1]
+            elif 'task_id' in options:
                 # Use the pre-defined task.
                 assert 1 <= options['task_id'] <= self.num_tasks, f'Task ID must be in [1, {self.num_tasks}].'
                 self.cur_task_id = options['task_id']

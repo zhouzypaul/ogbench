@@ -5,11 +5,13 @@ import gymnasium
 import numpy as np
 from tqdm import tqdm
 
+from ogbench.reward_utils import relabel_dataset
+
 DEFAULT_DATASET_DIR = '~/.ogbench/data'
 DATASET_URL = 'https://rail.eecs.berkeley.edu/datasets/ogbench'
 
 
-def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, compact_dataset=False):
+def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, compact_dataset=False, add_info=False):
     """Load OGBench dataset.
 
     Args:
@@ -18,10 +20,12 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         action_dtype: dtype for actions.
         compact_dataset: Whether to return a compact dataset (True, without 'next_observations') or a regular dataset
             (False, with 'next_observations').
+        add_info: Whether to add observation information ('qpos', 'qvel', and 'button_states') to the dataset.
 
     Returns:
         Dictionary containing the dataset. The dictionary contains the following keys: 'observations', 'actions',
         'terminals', and 'next_observations' (if `compact_dataset` is False) or 'valids' (if `compact_dataset` is True).
+        If `add_info` is True, the dictionary may also contain additional keys for observation information.
     """
     file = np.load(dataset_path)
 
@@ -34,6 +38,14 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         else:
             dtype = np.float32
         dataset[k] = file[k][...].astype(dtype)
+
+    if add_info:
+        # Read observation information.
+        info_keys = []
+        for k in ['qpos', 'qvel', 'button_states']:
+            if k in file:
+                dataset[k] = file[k][...]
+                info_keys.append(k)
 
     # Example:
     # Assume each trajectory has length 4, and (s0, a0, s1), (s1, a1, s2), (s2, a2, s3), (s3, a3, s4) are transition
@@ -76,6 +88,10 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
         dataset['actions'] = dataset['actions'][ob_mask]
         new_terminals = np.concatenate([dataset['terminals'][1:], [1.0]])
         dataset['terminals'] = new_terminals[ob_mask].astype(np.float32)
+
+        if add_info:
+            for k in info_keys:
+                dataset[k] = dataset[k][ob_mask]
 
     return dataset
 
@@ -134,8 +150,17 @@ def make_env_and_datasets(
     """
     # Make environment.
     splits = dataset_name.split('-')
-    env_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the dataset type.
-    env = gymnasium.make(env_name, **env_kwargs)
+    if 'singletask' in splits:
+        # Single-task environment.
+        env_name = '-'.join(splits[:-3] + splits[-2:])  # Remove the dataset type.
+        env = gymnasium.make(env_name, **env_kwargs)
+        dataset_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the word 'singletask'.
+        add_info = True
+    else:
+        # Original, goal-conditioned environment.
+        env_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the dataset type.
+        env = gymnasium.make(env_name, **env_kwargs)
+        add_info = False
 
     if env_only:
         return env
@@ -152,12 +177,26 @@ def make_env_and_datasets(
         ob_dtype=ob_dtype,
         action_dtype=action_dtype,
         compact_dataset=compact_dataset,
+        add_info=add_info,
     )
     val_dataset = load_dataset(
         val_dataset_path,
         ob_dtype=ob_dtype,
         action_dtype=action_dtype,
         compact_dataset=compact_dataset,
+        add_info=add_info,
     )
+
+    if 'singletask' in splits:
+        # Add reward information to the datasets.
+        relabel_dataset(env_name, env, train_dataset)
+        relabel_dataset(env_name, env, val_dataset)
+
+        # Remove information keys.
+        for k in ['qpos', 'qvel', 'button_states']:
+            if k in train_dataset:
+                del train_dataset[k]
+            if k in val_dataset:
+                del val_dataset[k]
 
     return env, train_dataset, val_dataset

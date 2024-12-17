@@ -356,6 +356,9 @@ class CubeEnv(ManipSpaceEnv):
                 ),
             ]
 
+        if self._reward_task_id == 0:
+            self._reward_task_id = 2  # Default task.
+
     def add_objects(self, arena_mjcf):
         # Add cube scene.
         cube_outer_mjcf = mjcf.from_path((self._desc_dir / 'cube_outer.xml').as_posix())
@@ -553,8 +556,8 @@ class CubeEnv(ManipSpaceEnv):
         if return_info:
             return self.compute_observation(), self.get_reset_info()
 
-    def post_step(self):
-        # Check if the cubes are in the target positions.
+    def _compute_successes(self):
+        """Compute object successes."""
         cube_successes = []
         for i in range(self._num_cubes):
             obj_pos = self._data.joint(f'object_joint_{i}').qpos[:3]
@@ -564,6 +567,11 @@ class CubeEnv(ManipSpaceEnv):
             else:
                 cube_successes.append(False)
 
+        return cube_successes
+
+    def post_step(self):
+        # Check if the cubes are in the target positions.
+        cube_successes = self._compute_successes()
         if self._mode == 'data_collection':
             self._success = cube_successes[self._target_block]
         else:
@@ -634,3 +642,12 @@ class CubeEnv(ManipSpaceEnv):
                 )
 
             return np.concatenate(ob)
+
+    def compute_reward(self, ob, action):
+        if self._reward_task_id is None:
+            return super().compute_reward(ob, action)
+
+        # Compute the reward based on the task.
+        successes = self._compute_successes()
+        reward = float(sum(successes) - len(successes))
+        return reward

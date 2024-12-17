@@ -81,17 +81,6 @@ class FrameStackWrapper(gymnasium.Wrapper):
         return self.get_observation(), reward, terminated, truncated, info
 
 
-def setup_egl():
-    """Set up EGL for rendering."""
-    if 'mac' in platform.platform():
-        # macOS doesn't support EGL.
-        pass
-    else:
-        os.environ['MUJOCO_GL'] = 'egl'
-        if 'SLURM_STEP_GPUS' in os.environ:
-            os.environ['EGL_DEVICE_ID'] = os.environ['SLURM_STEP_GPUS']
-
-
 def make_env_and_datasets(dataset_name, frame_stack=None):
     """Make OGBench environment and datasets.
 
@@ -102,8 +91,6 @@ def make_env_and_datasets(dataset_name, frame_stack=None):
     Returns:
         A tuple of the environment, training dataset, and validation dataset.
     """
-    setup_egl()
-
     # Use compact dataset to save memory.
     env, train_dataset, val_dataset = ogbench.make_env_and_datasets(dataset_name, compact_dataset=True)
     train_dataset = Dataset.create(**train_dataset)

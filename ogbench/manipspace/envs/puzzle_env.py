@@ -446,8 +446,17 @@ class PuzzleEnv(ManipSpaceEnv):
                     ).flatten(),
                 ),
             ]
-        else:
-            raise NotImplementedError
+
+        if self._reward_task_id == 0:
+            # Set default task.
+            if self._num_rows == 3 and self._num_cols == 3:
+                self._reward_task_id = 4
+            elif self._num_rows == 4 and self._num_cols == 4:
+                self._reward_task_id = 4
+            elif self._num_rows == 4 and self._num_cols == 5:
+                self._reward_task_id = 2
+            elif self._num_rows == 4 and self._num_cols == 6:
+                self._reward_task_id = 2
 
     def add_objects(self, arena_mjcf):
         # Add button scene.
@@ -588,6 +597,14 @@ class PuzzleEnv(ManipSpaceEnv):
         self._prev_button_states = self._cur_button_states.copy()
         super().pre_step()
 
+    def _compute_successes(self):
+        """Compute object successes."""
+        button_successes = [
+            (self._cur_button_states[i] == self._target_button_states[i]) for i in range(self._num_buttons)
+        ]
+
+        return button_successes
+
     def post_step(self):
         # Update button states.
         for i in range(self._num_buttons):
@@ -605,10 +622,7 @@ class PuzzleEnv(ManipSpaceEnv):
         self._apply_button_states()
 
         # Evaluate successes.
-        button_successes = [
-            (self._cur_button_states[i] == self._target_button_states[i]) for i in range(self._num_buttons)
-        ]
-
+        button_successes = self._compute_successes()
         if self._mode == 'data_collection':
             self._success = button_successes[self._target_button]
         else:
@@ -664,3 +678,12 @@ class PuzzleEnv(ManipSpaceEnv):
                 )
 
             return np.concatenate(ob)
+
+    def compute_reward(self, ob, action):
+        if self._reward_task_id is None:
+            return super().compute_reward(ob, action)
+
+        # Compute the reward based on the task.
+        successes = self._compute_successes()
+        reward = float(sum(successes) - len(successes))
+        return reward
