@@ -69,7 +69,7 @@ class Dataset(FrozenDict):
         else:
             return np.random.randint(self.size, size=num_idxs)
 
-    def sample(self, batch_size: int, idxs=None):
+    def sample(self, batch_size, idxs=None):
         """Sample a batch of transitions."""
         if idxs is None:
             idxs = self.get_random_idxs(batch_size)
@@ -202,7 +202,7 @@ class GCDataset:
                 stacked_observations = self.get_stacked_observations(np.arange(self.size))
                 self.dataset = Dataset(self.dataset.copy(dict(observations=stacked_observations)))
 
-    def sample(self, batch_size: int, idxs=None, evaluation=False):
+    def sample(self, batch_size, idxs=None, evaluation=False):
         """Sample a batch of transitions with goals.
 
         This method samples a batch of transitions with goals (value_goals and actor_goals) from the dataset. They are
@@ -315,7 +315,7 @@ class HGCDataset(GCDataset):
     - subgoal_steps: Subgoal steps (i.e., the number of steps to reach the low-level goal).
     """
 
-    def sample(self, batch_size: int, idxs=None, evaluation=False):
+    def sample(self, batch_size, idxs=None, evaluation=False):
         """Sample a batch of transitions with goals.
 
         This method samples a batch of transitions with goals from the dataset. The goals are stored in the keys

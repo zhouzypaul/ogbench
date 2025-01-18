@@ -76,8 +76,8 @@ class FrameStackWrapper(gymnasium.Wrapper):
         return self.get_observation(), info
 
     def step(self, action):
-        observation, reward, terminated, truncated, info = self.env.step(action)
-        self.frames.append(observation)
+        ob, reward, terminated, truncated, info = self.env.step(action)
+        self.frames.append(ob)
         return self.get_observation(), reward, terminated, truncated, info
 
 

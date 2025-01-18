@@ -37,7 +37,7 @@ def load_dataset(dataset_path, ob_dtype=np.float32, action_dtype=np.float32, com
             dtype = action_dtype
         else:
             dtype = np.float32
-        dataset[k] = file[k][...].astype(dtype)
+        dataset[k] = file[k][...].astype(dtype, copy=False)
 
     if add_info:
         # Read observation information.
