@@ -152,9 +152,10 @@ def make_env_and_datasets(
     splits = dataset_name.split('-')
     if 'singletask' in splits:
         # Single-task environment.
-        env_name = '-'.join(splits[:-3] + splits[-2:])  # Remove the dataset type.
+        pos = splits.index('singletask')
+        env_name = '-'.join(splits[: pos - 1] + splits[pos:])  # Remove the dataset type.
         env = gymnasium.make(env_name, **env_kwargs)
-        dataset_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the word 'singletask'.
+        dataset_name = '-'.join(splits[:pos] + splits[-1:])  # Remove the words 'singletask' and 'task\d' (if exists).
         add_info = True
     else:
         # Original, goal-conditioned environment.

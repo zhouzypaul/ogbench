@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def relabel_dataset(env_name, env, dataset):
     """Relabel the dataset with rewards and masks based on the fixed task of the environment.
     This is useful for single-task variants of the environments.
@@ -40,9 +41,13 @@ def relabel_dataset(env_name, env, dataset):
             # Compute successes.
             cube_xyzs_list = []
             for i in range(num_cubes):
-                cube_xyzs_list.append(dataset['qpos'][:, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3])
+                cube_xyzs_list.append(
+                    dataset['qpos'][
+                        :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
+                    ]
+                )
             cube_xyzs = np.stack(cube_xyzs_list, axis=1)
-            successes = (np.linalg.norm(target_cube_xyzs - cube_xyzs, axis=-1) <= 0.04)
+            successes = np.linalg.norm(target_cube_xyzs - cube_xyzs, axis=-1) <= 0.04
         elif 'scene' in env_name:
             num_cubes = env.unwrapped._num_cubes
             num_buttons = env.unwrapped._num_buttons
@@ -56,19 +61,25 @@ def relabel_dataset(env_name, env, dataset):
             # Compute successes.
             cube_xyzs_list = []
             for i in range(num_cubes):
-                cube_xyzs_list.append(dataset['qpos'][:, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3])
+                cube_xyzs_list.append(
+                    dataset['qpos'][
+                        :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
+                    ]
+                )
             cube_xyzs = np.stack(cube_xyzs_list, axis=1)
-            cube_successes = (np.linalg.norm(target_cube_xyzs - cube_xyzs, axis=-1) <= 0.04)
-            button_successes = (dataset['button_states'] == target_button_states)
-            drawer_success = (np.abs(dataset['qpos'][:, qpos_drawer_idx] - target_drawer_pos) <= 0.04)
-            window_success = (np.abs(dataset['qpos'][:, qpos_window_idx] - target_window_pos) <= 0.04)
-            successes = np.concatenate([cube_successes, button_successes, drawer_success[:, None], window_success[:, None]], axis=-1)
+            cube_successes = np.linalg.norm(target_cube_xyzs - cube_xyzs, axis=-1) <= 0.04
+            button_successes = dataset['button_states'] == target_button_states
+            drawer_success = np.abs(dataset['qpos'][:, qpos_drawer_idx] - target_drawer_pos) <= 0.04
+            window_success = np.abs(dataset['qpos'][:, qpos_window_idx] - target_window_pos) <= 0.04
+            successes = np.concatenate(
+                [cube_successes, button_successes, drawer_success[:, None], window_success[:, None]], axis=-1
+            )
         elif 'puzzle' in env_name:
             num_buttons = env.unwrapped._num_buttons
             target_button_states = env.unwrapped._target_button_states.copy()
 
             # Compute successes.
-            successes = (dataset['button_states'] == target_button_states)
+            successes = dataset['button_states'] == target_button_states
 
         rewards = successes.sum(axis=-1) - successes.shape[-1]
         masks = 1.0 - np.all(successes, axis=-1)

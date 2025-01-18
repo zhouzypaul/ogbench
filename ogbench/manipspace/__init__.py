@@ -8,15 +8,11 @@ visual_dict = dict(
 )
 cube_singletask_dict = dict(
     permute_blocks=False,
-    reward_task_id=0,  # 0 means the default task.
 )
 scene_singletask_dict = dict(
     permute_blocks=False,
-    reward_task_id=0,  # 0 means the default task.
 )
-puzzle_singletask_dict = dict(
-    reward_task_id=0,  # 0 means the default task.
-)
+puzzle_singletask_dict = dict()
 
 # Environments for offline goal-conditioned RL.
 register(
@@ -176,176 +172,198 @@ register(
 )
 
 # Environments for reward-based single-task offline RL.
-register(
-    id='cube-single-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=200,
-    kwargs=dict(
-        env_type='single',
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='visual-cube-single-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=200,
-    kwargs=dict(
-        env_type='single',
-        **visual_dict,
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='cube-double-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='double',
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='visual-cube-double-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='double',
-        **visual_dict,
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='cube-triple-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='triple',
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='visual-cube-triple-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='triple',
-        **visual_dict,
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='cube-quadruple-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='quadruple',
-        **cube_singletask_dict,
-    ),
-)
-register(
-    id='visual-cube-quadruple-singletask-v0',
-    entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='quadruple',
-        **visual_dict,
-        **cube_singletask_dict,
-    ),
-)
+for task_id in [None, 1, 2, 3, 4, 5]:
+    task_suffix = '' if task_id is None else f'-task{task_id}'
+    reward_task_id = 0 if task_id is None else task_id  # 0 means the default task.
 
-register(
-    id='scene-singletask-v0',
-    entry_point='ogbench.manipspace.envs.scene_env:SceneEnv',
-    max_episode_steps=750,
-    kwargs=dict(
-        env_type='scene',
-        **scene_singletask_dict,
-    ),
-)
-register(
-    id='visual-scene-singletask-v0',
-    entry_point='ogbench.manipspace.envs.scene_env:SceneEnv',
-    max_episode_steps=750,
-    kwargs=dict(
-        env_type='scene',
-        **visual_dict,
-        **scene_singletask_dict,
-    ),
-)
+    register(
+        id=f'cube-single-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=200,
+        kwargs=dict(
+            env_type='single',
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-cube-single-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=200,
+        kwargs=dict(
+            env_type='single',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'cube-double-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='double',
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-cube-double-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='double',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'cube-triple-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='triple',
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-cube-triple-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='triple',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'cube-quadruple-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='quadruple',
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-cube-quadruple-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.cube_env:CubeEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='quadruple',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **cube_singletask_dict,
+        ),
+    )
 
-register(
-    id='puzzle-3x3-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='3x3',
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='visual-puzzle-3x3-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='3x3',
-        **visual_dict,
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='puzzle-4x4-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='4x4',
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='visual-puzzle-4x4-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=500,
-    kwargs=dict(
-        env_type='4x4',
-        **visual_dict,
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='puzzle-4x5-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='4x5',
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='visual-puzzle-4x5-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='4x5',
-        **visual_dict,
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='puzzle-4x6-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='4x6',
-        **puzzle_singletask_dict,
-    ),
-)
-register(
-    id='visual-puzzle-4x6-singletask-v0',
-    entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
-    max_episode_steps=1000,
-    kwargs=dict(
-        env_type='4x6',
-        **visual_dict,
-        **puzzle_singletask_dict,
-    ),
-)
+    register(
+        id=f'scene-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.scene_env:SceneEnv',
+        max_episode_steps=750,
+        kwargs=dict(
+            env_type='scene',
+            reward_task_id=reward_task_id,
+            **scene_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-scene-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.scene_env:SceneEnv',
+        max_episode_steps=750,
+        kwargs=dict(
+            env_type='scene',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **scene_singletask_dict,
+        ),
+    )
+
+    register(
+        id=f'puzzle-3x3-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='3x3',
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-puzzle-3x3-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='3x3',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'puzzle-4x4-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='4x4',
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-puzzle-4x4-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=500,
+        kwargs=dict(
+            env_type='4x4',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'puzzle-4x5-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='4x5',
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-puzzle-4x5-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='4x5',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'puzzle-4x6-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='4x6',
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
+    register(
+        id=f'visual-puzzle-4x6-singletask{task_suffix}-v0',
+        entry_point='ogbench.manipspace.envs.puzzle_env:PuzzleEnv',
+        max_episode_steps=1000,
+        kwargs=dict(
+            env_type='4x6',
+            **visual_dict,
+            reward_task_id=reward_task_id,
+            **puzzle_singletask_dict,
+        ),
+    )
