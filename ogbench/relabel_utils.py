@@ -123,7 +123,7 @@ def add_oracle_reps(env_name, env, dataset):
             for i in range(num_cubes):
                 cube_xyzs_list.append(
                     dataset['qpos'][
-                    :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
+                        :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
                     ]
                 )
             cube_xyzs = np.stack(cube_xyzs_list, axis=1)
@@ -138,7 +138,7 @@ def add_oracle_reps(env_name, env, dataset):
             for i in range(num_cubes):
                 cube_xyzs_list.append(
                     dataset['qpos'][
-                    :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
+                        :, qpos_obj_start_idx + i * qpos_cube_length : qpos_obj_start_idx + i * qpos_cube_length + 3
                     ]
                 )
             cube_xyzs = np.stack(cube_xyzs_list, axis=1)

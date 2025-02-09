@@ -5,7 +5,7 @@ import gymnasium
 import numpy as np
 from tqdm import tqdm
 
-from ogbench.relabel_utils import relabel_dataset, add_oracle_reps
+from ogbench.relabel_utils import add_oracle_reps, relabel_dataset
 
 DEFAULT_DATASET_DIR = '~/.ogbench/data'
 DATASET_URL = 'https://rail.eecs.berkeley.edu/datasets/ogbench'
