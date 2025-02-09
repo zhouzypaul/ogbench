@@ -43,7 +43,7 @@ See the [project page](https://seohong.me/projects/ogbench/) for videos and more
 - **85 datasets** covering various challenges in offline goal-conditioned RL.
 - Support for both **pixel-based** and **state-based** observations.
 - **Clean, well-tuned reference implementations** of 6 offline goal-conditioned RL algorithms
-(GCBC, GCIVL, GCIQL, QRL, CRL, and HIQL) based on Jax.
+(GCBC, GCIVL, GCIQL, QRL, CRL, and HIQL) based on JAX.
 - **Fully reproducible** scripts for [the entire benchmark table](impls/hyperparameters.sh)
 and [datasets](data_gen_scripts/commands.sh).
 - `pip`-installable, easy-to-use APIs based on Gymnasium.
@@ -173,7 +173,7 @@ ogbench.download_datasets(
 
 # How to use the reference implementations
 
-OGBench also provides Jax-based reference implementations of six offline goal-conditioned RL algorithms
+OGBench also provides JAX-based reference implementations of six offline goal-conditioned RL algorithms
 (GCBC, GCIVL, GCIQL, QRL, CRL and HIQL).
 They are provided in the `impls` directory as a **standalone** codebase.
 You can safely remove the other parts of the repository if you only need the reference implementations
@@ -319,7 +319,7 @@ This codebase is inspired by or partly uses code from the following repositories
 - [NumPyConv2D](https://github.com/99991/NumPyConv2D) for the NumPy Conv2D implementation in the Powderworld environment.
 - [jaxrl_m](https://github.com/dibyaghosh/jaxrl_m), [rlbase](https://github.com/kvfrans/rlbase_stable),
   [HIQL](https://github.com/seohongpark/HIQL), and [cmd-notebook](https://github.com/vivekmyers/cmd-notebook)
-  for Jax-based implementations of RL algorithms.
+  for JAX-based implementations of RL algorithms.
 
 Special thanks to [Kevin Zakka](https://kzakka.com/) for providing the initial codebase for the manipulation environments.
 

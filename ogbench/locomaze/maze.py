@@ -42,6 +42,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             ob_type='states',
             add_noise_to_goal=True,
             reward_task_id=None,
+            use_oracle_rep=False,
             *args,
             **kwargs,
         ):
@@ -57,6 +58,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
                 reward_task_id: Task ID for single-task RL. If this is not None, the environment operates in a
                     single-task mode with the specified task ID. The task ID must be either a valid task ID or 0, where
                     0 means using the default task.
+                use_oracle_rep: Whether to use oracle goal representations.
                 *args: Additional arguments to pass to the parent locomotion environment.
                 **kwargs: Additional keyword arguments to pass to the parent locomotion environment.
             """
@@ -67,6 +69,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             self._ob_type = ob_type
             self._add_noise_to_goal = add_noise_to_goal
             self._reward_task_id = reward_task_id
+            self._use_oracle_rep = use_oracle_rep
             assert ob_type in ['states', 'pixels']
 
             # Define constants.
@@ -390,7 +393,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             # Save the goal observation.
             self.set_goal(goal_xy=goal_xy)
             self.set_xy(goal_xy)
-            goal_ob = self.get_ob()
+            goal_ob = self.get_oracle_rep() if self._use_oracle_rep else self.get_ob()
             if render_goal:
                 goal_rendered = self.render()
 
@@ -442,6 +445,10 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             else:
                 frame = self.render()
                 return frame
+
+        def get_oracle_rep(self):
+            """Return the oracle goal representation (i.e., the goal position) of the current state."""
+            return np.array(self.cur_goal_xy)
 
         def set_goal(self, goal_ij=None, goal_xy=None):
             """Set the goal position and update the target object."""
@@ -624,7 +631,7 @@ def make_maze_env(loco_env_type, maze_env_type, *args, **kwargs):
             # Save the goal observation.
             self.set_goal(goal_xy=goal_xy)
             self.set_agent_ball_xy(goal_xy, goal_xy)
-            goal_ob = self.get_ob()
+            goal_ob = self.get_oracle_rep() if self._use_oracle_rep else self.get_ob()
             if render_goal:
                 goal_rendered = self.render()
 

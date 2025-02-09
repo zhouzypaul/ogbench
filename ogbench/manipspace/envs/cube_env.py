@@ -466,7 +466,9 @@ class CubeEnv(ManipSpaceEnv):
                 self.step(self.action_space.sample())
 
             # Save the goal observation.
-            self._cur_goal_ob = self.compute_observation()
+            self._cur_goal_ob = (
+                self.compute_oracle_observation() if self._use_oracle_rep else self.compute_observation()
+            )
             if self._render_goal:
                 self._cur_goal_rendered = self.render()
             else:
@@ -642,6 +644,18 @@ class CubeEnv(ManipSpaceEnv):
                 )
 
             return np.concatenate(ob)
+
+    def compute_oracle_observation(self):
+        """Return the oracle goal representation of the current state."""
+        xyz_center = np.array([0.425, 0.0, 0.0])
+        xyz_scaler = 10.0
+
+        ob_info = self.compute_ob_info()
+        ob = []
+        for i in range(self._num_cubes):
+            ob.append((ob_info[f'privileged/block_{i}_pos'] - xyz_center) * xyz_scaler)
+
+        return np.concatenate(ob)
 
     def compute_reward(self, ob, action):
         if self._reward_task_id is None:

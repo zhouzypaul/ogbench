@@ -5,7 +5,7 @@ import gymnasium
 import numpy as np
 from tqdm import tqdm
 
-from ogbench.reward_utils import relabel_dataset
+from ogbench.relabel_utils import relabel_dataset, add_oracle_reps
 
 DEFAULT_DATASET_DIR = '~/.ogbench/data'
 DATASET_URL = 'https://rail.eecs.berkeley.edu/datasets/ogbench'
@@ -136,6 +136,7 @@ def make_env_and_datasets(
     dataset_dir=DEFAULT_DATASET_DIR,
     compact_dataset=False,
     env_only=False,
+    add_info=False,
     **env_kwargs,
 ):
     """Make OGBench environment and load datasets.
@@ -146,22 +147,29 @@ def make_env_and_datasets(
         compact_dataset: Whether to return a compact dataset (True, without 'next_observations') or a regular dataset
             (False, with 'next_observations').
         env_only: Whether to return only the environment.
+        add_info: Whether to add observation information ('qpos', 'qvel', and 'button_states') to the datasets.
         **env_kwargs: Keyword arguments to pass to the environment.
     """
     # Make environment.
     splits = dataset_name.split('-')
+    dataset_add_info = add_info
     if 'singletask' in splits:
         # Single-task environment.
         pos = splits.index('singletask')
         env_name = '-'.join(splits[: pos - 1] + splits[pos:])  # Remove the dataset type.
         env = gymnasium.make(env_name, **env_kwargs)
         dataset_name = '-'.join(splits[:pos] + splits[-1:])  # Remove the words 'singletask' and 'task\d' (if exists).
-        add_info = True
+        dataset_add_info = True
+    elif 'oraclerep' in splits:
+        # Environment with oracle goal representations.
+        env_name = '-'.join(splits[:-3] + splits[-1:])  # Remove the dataset type and the word 'oraclerep'.
+        env = gymnasium.make(env_name, use_oracle_rep=True, **env_kwargs)
+        dataset_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the word 'oraclerep'.
+        dataset_add_info = True
     else:
         # Original, goal-conditioned environment.
         env_name = '-'.join(splits[:-2] + splits[-1:])  # Remove the dataset type.
         env = gymnasium.make(env_name, **env_kwargs)
-        add_info = False
 
     if env_only:
         return env
@@ -178,14 +186,14 @@ def make_env_and_datasets(
         ob_dtype=ob_dtype,
         action_dtype=action_dtype,
         compact_dataset=compact_dataset,
-        add_info=add_info,
+        add_info=dataset_add_info,
     )
     val_dataset = load_dataset(
         val_dataset_path,
         ob_dtype=ob_dtype,
         action_dtype=action_dtype,
         compact_dataset=compact_dataset,
-        add_info=add_info,
+        add_info=dataset_add_info,
     )
 
     if 'singletask' in splits:
@@ -193,6 +201,12 @@ def make_env_and_datasets(
         relabel_dataset(env_name, env, train_dataset)
         relabel_dataset(env_name, env, val_dataset)
 
+    if 'oraclerep' in splits:
+        # Add oracle goal representations to the datasets.
+        add_oracle_reps(env_name, env, train_dataset)
+        add_oracle_reps(env_name, env, val_dataset)
+
+    if not add_info:
         # Remove information keys.
         for k in ['qpos', 'qvel', 'button_states']:
             if k in train_dataset:

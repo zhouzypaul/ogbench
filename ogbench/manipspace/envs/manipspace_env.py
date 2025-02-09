@@ -29,6 +29,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         mode='task',
         visualize_info=True,
         reward_task_id=None,
+        use_oracle_rep=False,
         **kwargs,
     ):
         """Initialize the ManipSpace environment.
@@ -45,6 +46,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
             reward_task_id: Task ID for single-task RL. If this is not None, the environment operates in a single-task
             mode with the specified task ID. The task ID must be either a valid task ID or 0, where 0 means using the
             default task.
+            use_oracle_rep: Whether to use oracle goal representations.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
@@ -84,6 +86,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         self._mode = mode
         self._visualize_info = visualize_info
         self._reward_task_id = reward_task_id
+        self._use_oracle_rep = use_oracle_rep
 
         assert ob_type in ['states', 'pixels']
 

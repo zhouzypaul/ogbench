@@ -143,7 +143,7 @@ class SACAgent(flax.struct.PyTreeNode):
 
         Args:
             seed: Random seed.
-            ex_observations: Example observations.
+            ex_observations: Example batch of observations.
             ex_actions: Example batch of actions.
             config: Configuration dictionary.
         """
