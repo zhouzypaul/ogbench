@@ -28,6 +28,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         terminate_at_goal=True,
         mode='task',
         visualize_info=True,
+        pixel_transparent_arm=True,
         reward_task_id=None,
         use_oracle_rep=False,
         **kwargs,
@@ -43,6 +44,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
                 for training and evaluation. In 'data_collection' mode, the environment is used for collecting offline
                 data.
             visualize_info: Whether to visualize the task information (e.g., success status).
+            pixel_transparent_arm: Whether to make the arm transparent in pixel-based observations.
             reward_task_id: Task ID for single-task RL. If this is not None, the environment operates in a single-task
             mode with the specified task ID. The task ID must be either a valid task ID or 0, where 0 means using the
             default task.
@@ -85,6 +87,7 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
         self._terminate_at_goal = terminate_at_goal
         self._mode = mode
         self._visualize_info = visualize_info
+        self._pixel_transparent_arm = pixel_transparent_arm
         self._reward_task_id = reward_task_id
         self._use_oracle_rep = use_oracle_rep
 
@@ -197,17 +200,18 @@ class ManipSpaceEnv(CustomMuJoCoEnv):
 
         if self._ob_type == 'pixels':
             # Adjust colors for pixel-based tasks.
-            arena_mjcf.find('material', 'ur5e/robotiq/metal').rgba[3] = 0.1
-            arena_mjcf.find('material', 'ur5e/robotiq/silicone').rgba[3] = 0.1
-            arena_mjcf.find('material', 'ur5e/robotiq/gray').rgba[3] = 0.1
             arena_mjcf.find('material', 'ur5e/robotiq/black').rgba = self._colors['purple']
-            arena_mjcf.find('material', 'ur5e/robotiq/black').rgba[3] = 0.1
             arena_mjcf.find('material', 'ur5e/robotiq/pad_gray').rgba = self._colors['purple']
-            arena_mjcf.find('material', 'ur5e/robotiq/pad_gray').rgba[3] = 0.5
-            arena_mjcf.find('material', 'ur5e/black').rgba[3] = 0.1
-            arena_mjcf.find('material', 'ur5e/jointgray').rgba[3] = 0.1
-            arena_mjcf.find('material', 'ur5e/linkgray').rgba[3] = 0.1
-            arena_mjcf.find('material', 'ur5e/lightblue').rgba[3] = 0.1
+            if self._pixel_transparent_arm:
+                arena_mjcf.find('material', 'ur5e/robotiq/metal').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/robotiq/silicone').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/robotiq/gray').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/robotiq/black').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/robotiq/pad_gray').rgba[3] = 0.5
+                arena_mjcf.find('material', 'ur5e/black').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/jointgray').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/linkgray').rgba[3] = 0.1
+                arena_mjcf.find('material', 'ur5e/lightblue').rgba[3] = 0.1
 
         # Add bounding boxes to visualize the workspace and object sampling bounds.
         mjcf_utils.add_bounding_box_site(

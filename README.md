@@ -36,11 +36,12 @@ See the [project page](https://seohong.me/projects/ogbench/) for videos and more
 
 ### Features
 
-- **8 types** of cool, realistic, diverse environments ([videos](https://seohong.me/projects/ogbench/)):
+- **8 types** of realistic and diverse environments ([videos](https://seohong.me/projects/ogbench/)):
   - **Locomotion**: PointMaze, AntMaze, HumanoidMaze, and AntSoccer.
   - **Manipulation**: Cube, Scene, and Puzzle.
   - **Drawing**: Powderworld.
 - **85 datasets** covering various challenges in offline goal-conditioned RL.
+- **410 tasks** for standard (i.e., non-goal-conditioned) offline RL.
 - Support for both **pixel-based** and **state-based** observations.
 - **Clean, well-tuned reference implementations** of 6 offline goal-conditioned RL algorithms
 (GCBC, GCIVL, GCIQL, QRL, CRL, and HIQL) based on JAX.
@@ -51,7 +52,7 @@ and [datasets](data_gen_scripts/commands.sh).
 
 
 
-# How to use the OGBench environments
+# Quick Start
 
 ### Installation
 
@@ -64,13 +65,22 @@ pip install ogbench
 It requires Python 3.8+ and has only three dependencies: `mujoco >= 3.1.6`, `dm_control >= 1.0.20`,
 and `gymnasium`.
 
-### Quick start
+To use OGBench for **offline goal-conditioned RL**,
+go to [this section](#usage-for-offline-goal-conditioned-rl).
+To use OGBench for **standard (non-goal-conditioned) offline RL**,
+go to [this section](#usage-for-standard-non-goal-conditioned-offline-rl).
+
+### Usage for *offline goal-conditioned RL*
 
 After installing OGBench, you can create an environment and datasets using `ogbench.make_env_and_datasets`.
 The environment follows the [Gymnasium](https://gymnasium.farama.org/) interface.
 The datasets will be automatically downloaded during the first run.
 
-Here is an example of how to use OGBench:
+Here is an example of how to use OGBench for offline goal-conditioned RL:
+
+> [!CAUTION]
+> Do **not** use `gymnasium.make` to create an environment. Use `ogbench.make_env_and_datasets` instead.
+> To create an environment without loading datasets, use `env_only=True` in `ogbench.make_env_and_datasets`.
 
 ```python
 import ogbench
@@ -112,6 +122,96 @@ for task_id in [1, 2, 3, 4, 5]:
 
 You can find a complete example of a training script for offline goal-conditioned RL in the `impls` directory.
 See the next section for more details on the reference implementations.
+
+### Usage for *standard (non-goal-conditioned) offline RL*
+
+OGBench also provides single-task variants of the environments for standard (reward-maximizing) offline RL.
+Each locomotion and manipulation environment provides five different single-task tasks corresponding to the five evaluation goals,
+and they are named with the suffix `singletask-task[n]` (e.g., `scene-play-singletask-task2-v0`),
+where `[n]` denotes a number between 1 and 5 (inclusive).
+Among the five tasks in each environment,
+the most representative one is chosen as the "default" task,
+and is *aliased* by the suffix `singletask` without a task number.
+Default tasks can be useful for reducing the number of benchmarking environments
+or for tuning hyperparameters.
+
+
+<details>
+<summary><b>Click to see the list of default tasks</b></summary>
+
+|     Environment     | Default task |
+|:-------------------:|:------------:|
+|    `pointmaze-*`    |   `task1`    |
+|     `antmaze-*`     |   `task1`    |
+|  `humanoidmaze-*`   |   `task1`    |
+|    `antsoccer-*`    |   `task4`    |
+|      `cube-*`       |   `task2`    |
+|      `scene-*`      |   `task2`    |
+| `puzzle-{3x3, 4x4}` |   `task4`    |
+| `puzzle-{4x5, 4x6}` |   `task2`    |
+
+</details>
+
+Here is an example of how to use OGBench for standard (non-goal-conditioned) offline RL:
+
+> [!CAUTION]
+> Do **not** use `gymnasium.make` to create an environment. Use `ogbench.make_env_and_datasets` instead.
+> To create an environment without loading datasets, use `env_only=True` in `ogbench.make_env_and_datasets`.
+
+> [!NOTE]
+> Offline RL datasets contain both the `terminals` and `masks` fields.
+> 
+> * `masks` denotes whether the agent should get a Bellman backup from the next observation.
+> It is 0 only when the task is complete (and 1 otherwise).
+> In this case, the agent should set the target Q-value to 0,
+> instead of using the next observation's target Q-value.
+> * `terminals` simply denotes whether the dataset trajectory is over,
+> regardless of task completion.
+>
+> For example, in `antmaze-large-navigate-singletask-v0`, the dataset contains 1M transitions,
+> with each trajectory having a length of 1000.
+> Hence, `sum(dataset['terminals'])` is exactly 1000 (i.e., `1` at the end of each trajectory),
+> whereas `sum(dataset['masks'])` can vary
+> depending on how many times the agent reaches the goal.
+> Note that dataset trajectories do not terminate even when the agent reaches the goal,
+> as they are collected by a scripted policy that is not task-aware.
+> 
+> For standard Q-learning, you likely only need `masks`,
+> but for other trajectory-aware algorithms (e.g., hierarchical RL or trajectory modeling-based approaches),
+> you may need both `masks` and `terminals`.
+> See [the IQL implementation in the FQL repository](https://github.com/seohongpark/fql/blob/master/agents/iql.py)
+> for an example of how to use `masks`.
+
+```python
+import ogbench
+
+# Make an environment and datasets (they will be automatically downloaded).
+# In `cube-double`, the default task is `task2`, and it is also callable by
+# `cube-double-play-singletask-v0`.
+dataset_name = 'cube-double-play-singletask-task2-v0'
+env, train_dataset, val_dataset = ogbench.make_env_and_datasets(dataset_name)
+
+# Train your offline RL agent on the dataset.
+# ...
+
+# Evaluate the agent.
+ob, info = env.reset()  # Reset the environment.
+
+done = False
+while not done:
+    action = env.action_space.sample()  # Replace this with your agent's action.
+    ob, reward, terminated, truncated, info = env.step(action)  # Gymnasium-style step.
+    # If the agent achieves the task, `terminated` will be `True`. If the episode length
+    # exceeds the maximum length without achieving the task, `truncated` will be `True`.
+    done = terminated or truncated
+    frame = env.render()  # Render the current frame (optional).
+
+success = info['success']  # Whether the agent achieved the task (0 or 1).
+```
+
+For standard offline RL, we do not provide official reference implementations or benchmarking results.
+However, you may find implementations of some offline RL algorithms (e.g., IQL, ReBRAC, and FQL) with partial benchmarking results
+in [this repository](https://github.com/seohongpark/fql).
 
 ### Dataset APIs
 
@@ -171,7 +271,7 @@ ogbench.download_datasets(
 ```
 
 
-# How to use the reference implementations
+# Reference Implementations
 
 OGBench also provides JAX-based reference implementations of six offline goal-conditioned RL algorithms
 (GCBC, GCIVL, GCIQL, QRL, CRL and HIQL).
@@ -261,7 +361,7 @@ This allows gradients to flow from the low-level actor loss to the subgoal repre
 - In Powderworld, use `--eval_temperature=0.3`, which helps prevent the agent from getting stuck in certain states.
 
 
-# How to reproduce the datasets
+# Reproducing Datasets
 
 We provide the full scripts and exact command-line flags used to produce all the datasets in OGBench.
 The scripts are provided in the `data_gen_scripts` directory.
@@ -278,9 +378,9 @@ pip install -e ".[train]"
 
 This installs the same dependencies as the reference implementations, but in the editable mode (`-e`).
 
-### Reproducing the datasets
+### Reproducing datasets
 
-To reproduce the datasets, you can run the scripts in the `data_gen_scripts` directory.
+To reproduce datasets, you can run the scripts in the `data_gen_scripts` directory.
 For locomotion environments, you need to first download the expert policies.
 We provide the exact command-line flags used to produce the datasets in [commands.sh](data_gen_scripts/commands.sh).
 Here is an example of how to reproduce a dataset for the `antmaze-large-navigate-v0` task:
@@ -299,7 +399,7 @@ export PYTHONPATH="../impls:${PYTHONPATH}"
 python generate_locomaze.py --env_name=antmaze-large-v0 --save_path=data/antmaze-large-navigate-v0.npz
 ```
 
-### Reproducing the expert policies
+### Reproducing expert policies
 
 If you want to train your own expert policies from scratch, you can run the corresponding commands in [commands.sh](data_gen_scripts/commands.sh).
 For example, to train an Ant expert policy, you can run the following command in the `data_gen_scripts` directory after setting `PYTHONPATH` as above:
@@ -326,10 +426,10 @@ Special thanks to [Kevin Zakka](https://kzakka.com/) for providing the initial c
 # Citation
 
 ```bibtex
-@article{ogbench_park2024,
+@inproceedings{ogbench_park2025,
   title={OGBench: Benchmarking Offline Goal-Conditioned RL},
-  author={Seohong Park and Kevin Frans and Benjamin Eysenbach and Sergey Levine},
-  journal={ArXiv},
-  year={2024}
+  author={Park, Seohong and Frans, Kevin and Eysenbach, Benjamin and Levine, Sergey},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2025},
 }
 ```
