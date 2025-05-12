@@ -614,6 +614,15 @@ class CubeEnv(ManipSpaceEnv):
             ob_info['privileged/target_block_yaw'] = np.array(
                 [lie.SO3(wxyz=self._data.mocap_quat[target_mocap_id]).compute_yaw_radians()]
             )
+            
+        for i in range(self._num_cubes):
+            obj_pos = self._data.joint(f'object_joint_{i}').qpos[:3]
+            tar_pos = self._data.mocap_pos[self._cube_target_mocap_ids[i]]
+            init_pos = self.cur_task_info["init_xyzs"][i]
+            ob_info[f"distance_from_goal_{i}"] = np.linalg.norm(obj_pos - tar_pos)
+            ob_info[f"distance_from_start_{i}"] = np.linalg.norm(obj_pos - init_pos)
+            
+        return ob_info
 
     def compute_observation(self):
         if self._ob_type == 'pixels':
